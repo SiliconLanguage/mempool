@@ -314,7 +314,7 @@ $(VERILATOR_MK): $(VERILATOR_CONF) $(VERILATOR_WAIVE) $(MEMPOOL_DIR)/Bender.yml 
 	$(verilator) $(VERILATOR_FLAGS) --top-module $(verilator_top)
 
 $(VERILATOR_EXE): $(VERILATOR_MK) $(shell find $(VERILATOR_SRC) -type f) Makefile
-	make -j4 -C $(verilator_build) -f $<
+	make -j1 -C $(verilator_build) -f $<
 
 verilate: $(VERILATOR_EXE) $(buildpath) Makefile
 	cd $(buildpath) && $(VERILATOR_EXE) $(veril_flags) | tee transcript

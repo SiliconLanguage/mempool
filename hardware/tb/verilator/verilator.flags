@@ -41,7 +41,6 @@
 // --report-unoptflat
 
 // Build the model hierarchical. For MinPool, a non-hierarchical model might be faster
---hierarchical
 
 // Flush streams after each $display. The timing impact is usually nonmeasurable
 --autoflush
