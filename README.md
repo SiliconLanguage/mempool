@@ -170,9 +170,12 @@ app=hello_world make benchmark
 
 You can set up the configuration of the system in the file `config/config.mk`, controlling the total number of cores, the number of cores per tile and whether the Xpulpimg extension is enabled or not in the Snitch core; the `xpulpimg` parameter also control the default core architecture considered when compiling applications for MemPool.
 
-To simulate the MemPool system with Verilator use the same format, but with the target
+To simulate the MemPool system with Verilator, use the same format but with the `verilate` target:
 ```bash
-make verilate
+# Run the Verilator simulation with the *hello_world* binary loaded
+app=baremetal/hello_world make verilate
+# Run with a specific configuration (e.g., MinPool with 16 cores)
+config=minpool app=baremetal/hello_world make verilate
 ```
 If, during the Verilator model compilation, you run out of space on your disk, use
 ```bash
@@ -200,9 +203,39 @@ The software and the hardware for different MemPool configurations can be compil
 cd hardware
 # Compile the hello_world for TeraPool configuration
 config=terapool make COMPILER=gcc hello_world
-# Run the simulation with the *hello_world* binary loaded
+# Run the simulation with the *hello_world* binary loaded (ModelSim)
 config=terapool app=baremetal/hello_world make sim
+# Run the simulation with the *hello_world* binary loaded (Verilator)
+config=terapool app=baremetal/hello_world make verilate
 ```
+
+## Simulation Performance and Resource Considerations
+
+Simulating the full 256-core `mempool` (default) or 1024-core `terapool` configuration with Verilator is **extremely resource-intensive** and can cause the host machine to hang or become unresponsive.
+
+### Observed Behavior
+
+When running the `hello_world` application on the default 256-core configuration via Verilator, the simulation proceeds as follows:
+
+1. All 256 harts are initialized and traced to individual `.dasm` files under `hardware/build/`.
+2. Each core prints "Hello!" through UART in a **fully serialized** fashion — each core must wait for its turn via a `mempool_barrier` (`amoadd.w` + `wfi`) synchronization primitive.
+3. Non-zero harts sit in WFI at `0x80000120` until woken up one-by-one. After printing, each hart enters a second WFI at `0x80001810` inside `mempool_barrier`, waiting for all 256 cores to complete.
+4. This serialized wake-print-barrier pattern, combined with 256 per-hart trace file writers, causes the Verilator simulation to consume large amounts of memory and run extremely slowly, often making the host system unresponsive.
+
+In a test run on a 24-core / 16GB RAM machine, only ~144 out of 256 cores had printed after ~20 minutes of wall-clock time before the system became unresponsive and required a hard restart.
+
+### Recommendations
+
+- **For interactive development and testing**, use the `minpool` configuration (16 cores), which completes quickly even on modest hardware:
+  ```bash
+  cd hardware
+  config=minpool app=baremetal/hello_world make verilate
+  ```
+- **For full 256-core (`mempool`) or 1024-core (`terapool`) Verilator simulations**, ensure you have:
+  - At least **64 GB of RAM**
+  - Sufficient swap space
+  - Optionally, disable tracing to reduce I/O and memory overhead
+- **Consider using ModelSim** for large-core-count simulations, as it may handle memory and scheduling more efficiently than Verilator for this design.
 
 ## DRAMsys Co-Simulation
 
