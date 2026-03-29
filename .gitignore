@@ -22,6 +22,10 @@ venv
 *.code-workspace
 # VSCode Favorites extension
 .favorites.json
+# Copilot customizations (synced from private repo)
+.github/agents/
+.github/prompts/
+.github/skills/
 # Ignore fish scripts :(
 *.fish
 # In general, ignore pdfs
