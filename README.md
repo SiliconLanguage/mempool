@@ -1,15 +1,16 @@
 >[!IMPORTANT]
 >**⚠️ SiliconLanguage Research Fork: MemPool-IPC**
 >
-> This repository is a specialized research fork of the ETH Zurich MemPool architecture, integrating the **MemPool-IPC** control and data plane framework developed by SiliconLanguage.
+> This repository is a specialized research fork of the ETH Zurich MemPool architecture, integrating the **MemPool-IPC: Hardware-Assisted Monadic Messaging Framework** engineered by SiliconLanguage.
 >
-> MemPool-IPC is a bare-metal, hardware-assisted messaging framework designed to mitigate NUMA latency in RISC-V many-core clusters. It implements zero-copy, lock-free queues utilizing the RISC-V Weak Memory Ordering (RVWMO) model, the Wait-on-Reservation-Set (`Zawrs`) extension for energy-efficient polling, and Non-Temporal Locality Hints (`Zihintntl`) to eliminate cache pollution during massive AI tensor streaming.
+> MemPool-IPC operationalizes the Monadic Paradigm by providing a bare-metal, zero-copy data plane specifically architected for RISC-V many-core scaled-up clusters. It implements lock-free queues utilizing the RISC-V Weak Memory Ordering (RVWMO) model, the Wait-on-Reservation-Set (Zawrs) extension for energy-efficient polling, and Non-Temporal Locality Hints (Zihintntl) to eliminate cache pollution. By bypassing the OS kernel entirely, it enables deterministic, line-rate tensor streaming for distributed AI workloads.
 >
 > ➡️ **[View the MemPool-IPC Source Code (software/mempool-ipc)](software/mempool-ipc/)**
 >
 > ➡️ **[Read the Formal Architecture Specification](software/mempool-ipc/docs/architecture-spec/)**
 >
-> **The original ETH Zurich MemPool documentation follows below:**
+> ---
+> *The original ETH Zurich MemPool documentation follows below:*
 
 [![ci](https://github.com/pulp-platform/mempool/actions/workflows/ci.yml/badge.svg)](https://github.com/pulp-platform/mempool/actions/workflows/ci.yml)
 [![lint](https://github.com/pulp-platform/mempool/actions/workflows/lint.yml/badge.svg)](https://github.com/pulp-platform/mempool/actions/workflows/lint.yml)
