@@ -287,10 +287,11 @@ In conclusion, the mempool-ipc framework represents a sophisticated synthesis of
 
 For the purposes of co-development in a NotebookLM environment, the following primary sources and direct links are provided:
 
-* MemPool Repository:   
+* **MemPool Repository:**   
   [https://github.com/pulp-platform/mempool \[1\]](https://github.com/pulp-platform/mempool)
 
-* MemPool Architecture Overview (Slides): [https://pulp-platform.org/docs/lugano2023/MemPool\_05\_06\_23.pdf \[2\]](https://pulp-platform.org/docs/lugano2023/MemPool_05_06_23.pdf)
+* **MemPool Architecture Overview (Slides):**
+  [https://pulp-platform.org/docs/lugano2023/MemPool\_05\_06\_23.pdf \[2\]](https://pulp-platform.org/docs/lugano2023/MemPool_05_06_23.pdf)
 
 * **Banshee Simulator Repository:**  
   [https://github.com/pulp-platform/banshee \[17\]](https://github.com/pulp-platform/banshee)
@@ -339,6 +340,6 @@ This architectural brain is intended to serve as a comprehensive reference for t
 \[34\] R. M. A. Silva et al., "ChamelloT: a tightly- and loosely-coupled hardware-assisted OS framework for low-end IoT devices," ResearchGate. \[Online\]. Available: [https://www.researchgate.net/publication/376684347\_ChamelloT\_a\_tightly-\_and\_loosely-coupled\_hardware-assisted\_OS\_framework\_for\_low-end\_IoT\_devices](https://www.researchgate.net/publication/376684347_ChamelloT_a_tightly-_and_loosely-coupled_hardware-assisted_OS_framework_for_low-end_IoT_devices)  
 \[35\] R. M. A. Silva et al., "Leveraging RISC-V to build an open-source (hardware) OS framework for reconfigurable IoT devices," CARRV 2021\. \[Online\]. Available: [https://carry.github.io/2021/papers/CARRV2021\_paper\_52\_Silva.pdf](https://carry.github.io/2021/papers/CARRV2021_paper_52_Silva.pdf)  
 \[36\] RISC-V International, "ISA Specifications Archive," RISC-V Tech Hub. \[Online\]. Available: [https://lf-riscv.atlassian.net/wiki/spaces/HOME/pages/16154899/RISC-V+Technical+Specifications+Archive](https://lf-riscv.atlassian.net/wiki/spaces/HOME/pages/16154899/RISC-V%20Technical%20Specifications%20Archive)  
----
 
+---
 *Copyright (c) 2026 SiliconLanguage Foundry. All rights reserved.*
