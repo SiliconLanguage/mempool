@@ -53,11 +53,11 @@ Table 2: RVWMO AMO Mappings for RMW Operations
 
 | Operation Type | RISC-V AMO Instruction | Ordering Annotation |
 | ----- | ----- | ----- |
-| `atomic_<op>(relaxed)` | `amo<op>.{w|d}` | None |
-| `atomic_<op>(acquire)` | `amo<op>.{w|d}.aq` | `.aq` bit set |
-| `atomic_<op>(release)` | `amo<op>.{w|d}.rl` | `.rl` bit set |
-| `atomic_<op>(acq_rel)` | `amo<op>.{w|d}.aqrl` | Both bits set |
-| `atomic_<op>(seq_cst)` | `amo<op>.{w|d}.aqrl` | Both bits set |
+| `atomic_<op>(relaxed)` | `amo<op>.{w \| d}` | None |
+| `atomic_<op>(acquire)` | `amo<op>.{w \| d}.aq` | `.aq` bit set |
+| `atomic_<op>(release)` | `amo<op>.{w \| d}.rl` | `.rl` bit set |
+| `atomic_<op>(acq_rel)` | `amo<op>.{w \| d}.aqrl` | Both bits set |
+| `atomic_<op>(seq_cst)` | `amo<op>.{w \| d}.aqrl` | Both bits set |
 
 \[11\]
 
@@ -287,10 +287,10 @@ In conclusion, the mempool-ipc framework represents a sophisticated synthesis of
 
 For the purposes of co-development in a NotebookLM environment, the following primary sources and direct links are provided:
 
-* **MemPool Repository:**   
+* MemPool Repository:   
   [https://github.com/pulp-platform/mempool \[1\]](https://github.com/pulp-platform/mempool)
 
-* **MemPool Architecture Overview (Slides):** [https://pulp-platform.org/docs/lugano2023/MemPool\_05\_06\_23.pdf \[2\]](https://pulp-platform.org/docs/lugano2023/MemPool_05_06_23.pdf)
+* MemPool Architecture Overview (Slides): [https://pulp-platform.org/docs/lugano2023/MemPool\_05\_06\_23.pdf \[2\]](https://pulp-platform.org/docs/lugano2023/MemPool_05_06_23.pdf)
 
 * **Banshee Simulator Repository:**  
   [https://github.com/pulp-platform/banshee \[17\]](https://github.com/pulp-platform/banshee)
