@@ -1,7 +1,5 @@
 # Architectural Analysis and Technical Specification for MemPool-IPC
 
-## ---
-
 ## **A Hardware-Assisted Rust Messaging Framework for RISC-V Many-Core Architectures**
 
 Author: Ping Long, Chief Systems Architect, Lead Researcher, SiliconLanguage Foundry
