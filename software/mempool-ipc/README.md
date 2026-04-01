@@ -52,7 +52,7 @@ mempool-ipc/
 
 **[Architectural Analysis and Technical Specification for MemPool-IPC:](docs/architecture-spec/)** A formal analysis of hardware-assisted Rust messaging frameworks for RISC-V many-core architectures.
 
-**[SiliconLanguage Foundry:](https://notebooklm.google.com/docs/architecture-spec/)** For additional research on the Monadic Cloud Hypervisor, user-space storage engines, and Software-Hardware Co-Design.
+**[SiliconLanguage Foundry:](https://siliconlanguage.com/)** For additional research on the Monadic Cloud Hypervisor, user-space storage engines, and Software-Hardware Co-Design.
 
 **Primary Author & Architect:** Ping Long, Chief Systems Architect | Founder, SiliconLanguage ping.long@siliconlanguage.com
 
