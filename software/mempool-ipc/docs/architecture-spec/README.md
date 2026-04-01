@@ -34,12 +34,12 @@ Table 1: RVWMO Mappings for Atomic Loads, Stores, and Fences
 
 | C/C++ Construct | RISC-V Machine Mapping | Note |
 | ----- | ----- | ----- |
-| `atomic_load(relaxed)` | `l{b|h|w|d}` | No ordering |
-| `atomic_load(acquire)` | `l{b|h|w|d}; fence r,rw` | Leading read-to-read/write fence |
-| `atomic_load(seq_cst)` | `fence rw,rw; l{b|h|w|d}; fence r,rw` | Full fence surrounding the load |
-| `atomic_store(relaxed)` | `s{b|h|w|d}` | No ordering |
-| `atomic_store(release)` | `fence rw,w; s{b|h|w|d}` | Preceding read/write-to-write fence |
-| `atomic_store(seq_cst)` | `fence rw,w; s{b|h|w|d}; fence rw,rw` | Full fence surrounding the store |
+| `atomic_load(relaxed)` | `l{b\|h\|w\|d}` | No ordering |
+| `atomic_load(acquire)` | `l{b\|h\|w\|d}; fence r,rw` | Leading read-to-read/write fence |
+| `atomic_load(seq_cst)` | `fence rw,rw; l{b\|h\|w\|d}; fence r,rw` | Full fence surrounding the load |
+| `atomic_store(relaxed)` | `s{b\|h\|w\|d}` | No ordering |
+| `atomic_store(release)` | `fence rw,w; s{b\|h\|w\|d}` | Preceding read/write-to-write fence |
+| `atomic_store(seq_cst)` | `fence rw,w; s{b\|h\|w\|d}; fence rw,rw` | Full fence surrounding the store |
 | `atomic_thread_fence(acquire)` | `fence r,rw` | Standard acquire barrier |
 | `atomic_thread_fence(release)` | `fence rw,w` | Standard release barrier |
 | `atomic_thread_fence(acq_rel)` | `fence.tso` | TSO-style barrier (or separate fences) |
