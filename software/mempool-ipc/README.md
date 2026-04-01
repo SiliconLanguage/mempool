@@ -1,4 +1,4 @@
-# MemPool-IPC: Hardware-Assisted Messaging Framework
+# MemPool-IPC: Hardware-Assisted Monadic Messaging Framework
 **Engineered by [SiliconLanguage](https://siliconlanguage.com/)**
 
 MemPool-IPC is a bare-metal, zero-copy messaging framework and data plane specifically architected for RISC-V many-core scaled-up clusters, such as MemPool (256 cores, 1 MiB shared L1) and TeraPool (1024 cores, 4 MiB shared L1) [1, 2]. 
@@ -49,8 +49,11 @@ mempool-ipc/
 ```
 --------------------------------------------------------------------------------
 📖 **Publications & Further Reading**
-**Architectural Analysis and Technical Specification for MemPool-IPC:** A formal analysis of hardware-assisted Rust messaging frameworks for RISC-V many-core architectures.
-**SiliconLanguage Foundry:** For additional research on the Monadic Cloud Hypervisor, user-space storage engines, and Software-Hardware Co-Design.
+
+**[Architectural Analysis and Technical Specification for MemPool-IPC:](docs/architecture-spec/)** A formal analysis of hardware-assisted Rust messaging frameworks for RISC-V many-core architectures.
+
+**[SiliconLanguage Foundry:](https://notebooklm.google.com/docs/architecture-spec/)** For additional research on the Monadic Cloud Hypervisor, user-space storage engines, and Software-Hardware Co-Design.
+
 **Primary Author & Architect:** Ping Long, Chief Systems Architect | Founder, SiliconLanguage ping.long@siliconlanguage.com
 
 ***
