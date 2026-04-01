@@ -1,3 +1,16 @@
+>[!IMPORTANT]
+>**⚠️ SiliconLanguage Research Fork: MemPool-IPC**
+>
+> This repository is a specialized research fork of the ETH Zurich MemPool architecture, integrating the **MemPool-IPC** control and data plane framework developed by SiliconLanguage.
+>
+> MemPool-IPC is a bare-metal, hardware-assisted messaging framework designed to mitigate NUMA latency in RISC-V many-core clusters. It implements zero-copy, lock-free queues utilizing the RISC-V Weak Memory Ordering (RVWMO) model, the Wait-on-Reservation-Set (`Zawrs`) extension for energy-efficient polling, and Non-Temporal Locality Hints (`Zihintntl`) to eliminate cache pollution during massive AI tensor streaming.
+>
+> ➡️ **[View the MemPool-IPC Source Code (software/mempool-ipc)](software/mempool-ipc/)**
+>
+> ➡️ **[Read the Formal Architecture Specification](software/mempool-ipc/docs/architecture-spec/)**
+>
+> **The original ETH Zurich MemPool documentation follows below:**
+
 [![ci](https://github.com/pulp-platform/mempool/actions/workflows/ci.yml/badge.svg)](https://github.com/pulp-platform/mempool/actions/workflows/ci.yml)
 [![lint](https://github.com/pulp-platform/mempool/actions/workflows/lint.yml/badge.svg)](https://github.com/pulp-platform/mempool/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
