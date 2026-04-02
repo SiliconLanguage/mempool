@@ -1,0 +1,13 @@
+# Build artifacts
+*.o
+*.elf
+*.dump
+arch.ld
+spike_arch.ld
+
+# Generated build directories
+spike_src/
+spike_build/
+
+# External source (separate repo)
+banshee-src/
