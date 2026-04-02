@@ -180,34 +180,40 @@ pub fn cores_per_group() -> u32 {
 // resumes when the producer's store invalidates the reserved cacheline.
 // The NTL.PALL hint prevents the polled address from displacing
 // application working-set data in any cache level.
+//
+// When the Zawrs extension is unavailable (e.g. Spike emulator), a
+// portable fallback uses acquire loads + `core::hint::spin_loop()`.
+// The `#[cfg(target_feature = "zawrs")]` gate selects at compile time.
 // -------------------------------------------------------------------------
 
 /// Hardware-assisted polling: spins until `*addr >= expected`.
 ///
-/// Uses the RISC-V Zawrs + Zihintntl extensions to minimize crossbar
-/// interconnect traffic on MemPool's shared-L1 TCDM:
+/// # Compilation Modes
 ///
-/// 1. **NTL.PALL** (Zihintntl): Non-temporal locality hint — marks the
-///    next memory access as ephemeral across all cache levels. On
-///    MemPool, this prevents the polled cacheline from displacing
-///    valuable application data in L1 bank buffers.
+/// - **`target_feature = "zawrs"` enabled** (QEMU, MemPool RTL):
+///   Uses NTL.PALL + LR.W.AQ + WRS.NTO inline assembly. The hart
+///   suspends into a low-power state, generating zero crossbar traffic
+///   until the producer's store invalidates the reservation set.
 ///
-/// 2. **LR.W.AQ** (A extension): Load-Reserved Word with acquire
-///    ordering. Reads the atomic variable and establishes a hardware
-///    reservation set on the containing cacheline. The `.aq` suffix
-///    enforces RVWMO acquire semantics: all subsequent loads/stores by
-///    this hart are ordered after this load.
+/// - **Fallback** (Spike, generic rv32ima):
+///   Uses `core::sync::atomic::AtomicU32::load(Acquire)` in a loop
+///   with `core::hint::spin_loop()` (compiles to a `pause` hint on
+///   RISC-V targets that support Zihintpause, or a nop otherwise).
 ///
-/// 3. **WRS.NTO** (Zawrs, opcode `0x00D00073`): Wait on Reservation
-///    Set, No Timeout. If the loaded value does not satisfy the exit
-///    condition, the hart enters a low-power suspended state. It
-///    resumes only when:
-///    - Another hart's store invalidates the reserved cacheline, OR
-///    - An interrupt or other implementation-defined event occurs
-///      (spurious wakeup — handled by the retry loop).
-///
-/// The loop structure handles spurious wakeups: after each resume, we
-/// re-execute NTL.PALL + LR.W.AQ and re-check the condition.
+/// Returns the loaded value (with acquire ordering) once `*addr >= expected`.
+#[inline(always)]
+pub fn hardware_spin_wait(addr: &core::sync::atomic::AtomicU32, expected: u32) -> u32 {
+    #[cfg(target_feature = "zawrs")]
+    {
+        hardware_spin_wait_zawrs(addr, expected)
+    }
+    #[cfg(not(target_feature = "zawrs"))]
+    {
+        hardware_spin_wait_fallback(addr, expected)
+    }
+}
+
+/// Zawrs fast path: NTL.PALL + LR.W.AQ + WRS.NTO polling loop.
 ///
 /// # Emitted instruction sequence
 ///
@@ -217,46 +223,25 @@ pub fn cores_per_group() -> u32 {
 ///     lr.w.aq  val, (addr)     # load-reserved + acquire
 ///     bgeu val, expected, 3f   # exit if val >= expected
 ///     WRS.NTO                  # suspend until cacheline invalidated
-///     j    2b                  # retry
+///     j    2b                  # retry (spurious wakeup)
 /// 3:
 /// ```
-///
-/// # Usage
-///
-/// Replaces `nop()` spin-loops in barrier and consumer paths:
-///
-/// ```rust,ignore
-/// // Before (Phase 1):
-/// while barrier.load(Ordering::SeqCst) < expected { nop(); }
-///
-/// // After (Phase 2):
-/// hardware_spin_wait(&barrier, expected);
-/// ```
-///
-/// Returns the loaded value (with acquire ordering) once `*addr >= expected`.
+#[cfg(target_feature = "zawrs")]
 #[inline(always)]
-pub fn hardware_spin_wait(addr: &core::sync::atomic::AtomicU32, expected: u32) -> u32 {
+fn hardware_spin_wait_zawrs(addr: &core::sync::atomic::AtomicU32, expected: u32) -> u32 {
     let val: u32;
     let ptr = addr as *const core::sync::atomic::AtomicU32 as *const u32;
     unsafe {
         asm!(
-            // Retry loop entry
             "2:",
-            // ---- NTL.PALL (Zihintntl) ----
-            // Encoded as R-type: add x0, x0, x3 (32-bit, never compressed)
-            // Hint: next memory access has no temporal locality at any level
+            // NTL.PALL (Zihintntl): non-temporal hint, all cache levels
+            // Encoded as R-type add x0, x0, x3 — forces 32-bit (no C compress)
             ".insn r 0x33, 0, 0, x0, x0, x3",
-            // ---- LR.W.AQ (A extension) ----
-            // Load-reserved with acquire ordering (RVWMO)
-            // Establishes reservation set on the cacheline containing *ptr
+            // LR.W.AQ: load-reserved with acquire ordering (RVWMO)
             "lr.w.aq {val}, ({ptr})",
-            // ---- Condition check ----
-            // Exit loop if loaded value >= expected (unsigned)
+            // Exit if val >= expected (unsigned)
             "bgeu {val}, {exp}, 3f",
-            // ---- WRS.NTO (Zawrs) ----
-            // Wait on Reservation Set, No Timeout
-            // Hart suspends until reservation is invalidated by a remote store
-            // Opcode: 0x00D00073 (SYSTEM-type, imm=0x00D)
+            // WRS.NTO (Zawrs): suspend until reservation invalidated
             ".insn i 0x73, 0, x0, x0, 0xD",
             // Retry after wakeup (may be spurious)
             "j 2b",
@@ -264,12 +249,25 @@ pub fn hardware_spin_wait(addr: &core::sync::atomic::AtomicU32, expected: u32) -
             ptr = in(reg) ptr,
             exp = in(reg) expected,
             val = out(reg) val,
-            // No nomem — the asm block reads from memory via lr.w.
-            // No pure — lr.w has side effects (reservation set).
-            // The absence of nomem acts as a compiler fence, preventing
-            // reordering of Rust loads/stores across this asm block.
             options(nostack),
         );
     }
     val
+}
+
+/// Portable fallback: acquire load + spin_loop() hint.
+///
+/// Used on emulators/microarchitectures without Zawrs (e.g. Spike).
+/// `core::hint::spin_loop()` emits a PAUSE hint where available,
+/// reducing pipeline resource waste during the spin.
+#[cfg(not(target_feature = "zawrs"))]
+#[inline(always)]
+fn hardware_spin_wait_fallback(addr: &core::sync::atomic::AtomicU32, expected: u32) -> u32 {
+    loop {
+        let val = addr.load(Ordering::Acquire);
+        if val >= expected {
+            return val;
+        }
+        core::hint::spin_loop();
+    }
 }

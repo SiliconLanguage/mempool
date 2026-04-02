@@ -1,2 +1,5 @@
 # Cargo build output
 target/
+
+# Generated linker script (preprocessed from arch.ld.c)
+spike_arch.ld
