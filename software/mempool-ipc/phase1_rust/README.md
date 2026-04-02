@@ -16,7 +16,7 @@ phase1_rust/
 ├── build.rs              # Generates config.rs from env vars (NUM_CORES, etc.)
 └── src/
     ├── lib.rs            # SPSC queue structs, publish/consume, main()
-    ├── primitives.rs     # CSR access (mhartid, mcycle, trace), topology, wait/wfi
+    ├── primitives.rs     # CSR access, topology, wait/wfi, hardware_spin_wait (Zawrs)
     ├── hw.rs             # MMIO register map: wake-up, EOC, cache control
     ├── sync.rs           # FFI bindings to synchronization.h barrier functions
     └── alloc_ffi.rs      # FFI bindings to alloc.h dynamic memory allocator
@@ -26,7 +26,7 @@ phase1_rust/
 
 | Module | C Origin | Binding Strategy |
 |--------|----------|------------------|
-| `primitives` | `runtime.h` (inline) | Re-implemented as `asm!()` — no linkable C symbol exists |
+| `primitives` | `runtime.h` (inline) + Zawrs/Zihintntl | Re-implemented as `asm!()` — includes `hardware_spin_wait` (LR.W + WRS.NTO + NTL.PALL) |
 | `hw` | `addrmap.h` + `control_registers.h` | Const MMIO addresses + `write_volatile` |
 | `sync` | `synchronization.h` | `extern "C"` FFI + safe wrappers (link-time resolution) |
 | `alloc_ffi` | `alloc.h` | `extern "C"` FFI + `#[repr(C)]` structs (link-time resolution) |
@@ -121,6 +121,7 @@ Key patterns to verify:
 - **Release store:** `fence rw,w` + `sw` (publish path)
 - **Acquire load:** `lw` + `fence r,rw` (consume path)
 - **SeqCst barrier:** `amoadd.w.aqrl` (hw_barrier)
+- **Hardware polling:** `add zero,zero,gp` (NTL.PALL) + `lr.w.aq` + `0x00d00073` (WRS.NTO)
 
 ## Struct Layout (ABI Compatibility with Phase 0 C)
 
@@ -145,6 +146,13 @@ replicates C's `__attribute__((aligned(64)))` for struct members.
   For final ELF output, pass `-C target-feature=-c` or use a custom
   target JSON to disable compressed instructions.
 
+- **Hardware-assisted polling (Phase 2):** `hardware_spin_wait()` uses
+  NTL.PALL (Zihintntl) + LR.W.AQ (A) + WRS.NTO (Zawrs) to suspend the
+  hart until the producer invalidates the polled cacheline. Eliminates
+  O(N×T) crossbar traffic from naive `lw`+`nop` spin-loops. Requires
+  Zawrs + Zihintntl hardware support; NTL.PALL is force-encoded as
+  32-bit `.insn r` to prevent C-extension compression.
+
 - **No heap, no OS:** `#![no_std]` + `#![no_main]` + `panic = "abort"`.
   The panic handler loops on `nop` forever.
 
@@ -157,4 +165,5 @@ replicates C's `__attribute__((aligned(64)))` for struct members.
 
 - [ ] Link `libmempool_ipc_phase1.a` with `crt0.o` + linker scripts into a final ELF
 - [ ] Run on Spike (2-hart) and compare traces against Phase 0
+- [ ] Integrate `hardware_spin_wait` into barrier and consumer spin-loops
 - [ ] Evaluate `-C target-feature=-c` or custom `rv32ima.json` target
