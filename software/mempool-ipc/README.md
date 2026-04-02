@@ -40,13 +40,67 @@ mempool-ipc/
 │   ├── src/main.c                        # SPMD hardware-in-the-loop test harness
 │   └── Makefile                          # Hooks for Banshee emulator / RTL simulation
 │
-└── phase1_rust/                          # Phase 1 & 2: Idiomatic Rust Data Plane
+├── phase1_rust/                          # Phase 1–4: Idiomatic Rust Data Plane
+│   ├── src/
+│   │   ├── main.rs                      # Bare-metal entry point + HTIF exit
+│   │   ├── lib.rs                       # High-level Sender/Receiver Channel API
+│   │   └── primitives.rs               # Inline asm! for Zawrs & Zihintntl
+│   ├── Makefile                         # Spike cross-compile & run pipeline
+│   ├── build.rs                         # bindgen FFI configuration
+│   └── Cargo.toml                       # no_std environment definitions
+│
+└── dataplane-emu/                        # Phase 5: Hardware Offloading & Zero-Copy I/O
+    ├── include/dataplane_emu/
+    │   ├── sl_intrinsics.h              # Unified RISC-V / ARM64 inline asm
+    │   └── spsc_queue.h                 # Lock-free queue with hw-assisted polling
     ├── src/
-    │   ├── lib.rs                        # High-level Sender/Receiver Channel API
-    │   └── primitives.rs                 # Inline asm! for Zawrs & Zihintntl
-    ├── build.rs                          # bindgen FFI configuration
-    └── Cargo.toml                        # no_std environment definitions
+    │   └── main.cpp                     # Host-mode functional verification
+    └── Makefile                         # Host / cross-compile targets
 ```
+---
+
+## 🚀 Phase 5: Hardware Offloading & Zero-Copy I/O (`dataplane-emu/`)
+
+Phase 5 introduces a **unified C++ hardware abstraction layer** that maps identical SPSC queue semantics onto both RISC-V and ARM64 DPU targets (e.g., NVIDIA BlueField-3).
+
+### Unified Intrinsics — `sl_intrinsics.h`
+
+The `sl_intrinsics.h` header provides two primitives that eliminate the "synchronization tax" across architectures:
+
+| Primitive | RISC-V (Zawrs + Zihintntl) | ARM64 (ARMv8.1) | Purpose |
+|-----------|---------------------------|-----------------|---------|
+| `sl_wait_on_address()` | `LR.D.AQ` + `WRS.NTO` | `LDAXR` + `WFE` | Zero-traffic consumer polling — core suspends until producer's store invalidates reservation |
+| `sl_load_nt()` | `NTL.PALL` + `LD` | `LDNP` (Load Non-Temporal Pair) | Cache pollution prevention — streaming data bypasses L1/L2 without displacing hot working set |
+
+### Architectural Mapping
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    sl_wait_on_address()                         │
+├───────────────────────────┬─────────────────────────────────────┤
+│ RISC-V (MemPool/TeraPool) │ ARM64 (BlueField-3 DPU)            │
+│                           │                                     │
+│ 1: LR.D.AQ  t0, (a0)    │ 1: LDAXR  x0, [x1]                 │
+│    BEQ  t0, a1, 2f       │    CMP    x0, x2                    │
+│    WRS.NTO                │    B.EQ   2f                        │
+│    J    1b                │    WFE                              │
+│ 2:                        │    B      1b                        │
+│                           │ 2:                                  │
+├───────────────────────────┼─────────────────────────────────────┤
+│ Acquire: LR.D.AQ          │ Acquire: LDAXR (Load-Acquire Excl.) │
+│ Suspend: WRS.NTO           │ Suspend: WFE (Wait For Event)       │
+│ Wake: store invalidates    │ Wake: global monitor SEV             │
+│        reservation set     │        (implicit on exclusive store) │
+└───────────────────────────┴─────────────────────────────────────┘
+```
+
+### SmartNIC Deployment Path
+
+The unified header enables a single C++ data plane codebase to target:
+- **MemPool/TeraPool** — 256/1024-core RISC-V clusters with shared L1 TCDM
+- **NVIDIA BlueField-3** — ARM64 Cortex-A78 cores with ConnectX-7 NIC offload
+- **x86_64 hosts** — Functional verification (intrinsics compile to no-ops, queue uses `std::atomic`)
+
 --------------------------------------------------------------------------------
 📖 **Publications & Further Reading**
 
