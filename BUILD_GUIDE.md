@@ -123,7 +123,7 @@ git clone https://git.kernel.org/pub/scm/utils/dtc/dtc.git && cd dtc
 make PREFIX=$HOME/.local install
 ```
 
-> **Note:** This step required sudo for `device-tree-compiler` as an alternative, which was eventually done via `sudo apt-get install device-tree-compiler`.
+> **Note:** The above `dtc` build and install into `~/.local` was verified to work on Ubuntu 24.04 without sudo. If you _do_ have sudo and prefer to use the distro package instead of building from source, you can alternatively run `sudo apt-get install device-tree-compiler` and skip the manual `dtc` build.
 
 ### 1.8 libelf Development Headers
 
@@ -174,7 +174,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export CFLAGS="-I$HOME/.local/include"
 export CXXFLAGS="-I$HOME/.local/include"
 export LDFLAGS="-L$HOME/.local/lib"
-export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 make tc-riscv-gcc
 ```
@@ -301,7 +301,7 @@ The `hardware/tb/verilator/verilator.flags` file contained `--hierarchical`, whi
 
 ```diff
 - --hierarchical
-+ // --hierarchical  # Disabled for MinPool (avoids Verilator v4.218 internal fault)
++ // --hierarchical  # Disabled for MinPool configuration (hierarchical mode causes crashes)
 ```
 
 ### 5.7 Build the Verilated Model
@@ -311,7 +311,7 @@ cd hardware
 export PATH="$HOME/.local/bin:$PWD/../install/riscv-gcc/bin:$PWD/../install/verilator/bin:$PWD/../install/bender:$PATH"
 export CPATH="$HOME/.local/include"
 export LIBRARY_PATH="$HOME/.local/lib"
-export LD_LIBRARY_PATH="$HOME/.local/lib"
+export LD_LIBRARY_PATH="$HOME/.local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 config=minpool make verilate
 ```

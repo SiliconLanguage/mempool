@@ -233,7 +233,7 @@ When running the `hello_world` application on the default 256-core configuration
 
 1. All 256 harts are initialized and traced to individual `.dasm` files under `hardware/build/`.
 2. Each core prints "Hello!" through UART in a **fully serialized** fashion — each core must wait for its turn via a `mempool_barrier` (`amoadd.w` + `wfi`) synchronization primitive.
-3. Non-zero harts sit in WFI at `0x80000120` until woken up one-by-one. After printing, each hart enters a second WFI at `0x80001810` inside `mempool_barrier`, waiting for all 256 cores to complete.
+3. In one representative build, non-zero harts were observed to sit in WFI (e.g., at PC `0x80000120`) until woken up one-by-one. After printing, each hart entered a second WFI inside `mempool_barrier` (e.g., at PC `0x80001810`), waiting for all 256 cores to complete. (Exact PC values are build- and configuration-dependent.)
 4. This serialized wake-print-barrier pattern, combined with 256 per-hart trace file writers, causes the Verilator simulation to consume large amounts of memory and run extremely slowly, often making the host system unresponsive.
 
 In a test run on a 24-core / 16GB RAM machine, only ~144 out of 256 cores had printed after ~20 minutes of wall-clock time before the system became unresponsive and required a hard restart.
